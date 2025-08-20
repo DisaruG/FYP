@@ -1,14 +1,21 @@
-from src.preprocessing import preprocess_signature
+import os
+from src.preprocessing import preprocess_multiple_for_hog
 
 def main():
-    print("🔹 Signature Verification System - Basic Version")
-    print("Step 1: Preprocessing the signature image...\n")
+    # Path to your test signatures folder
+    test_folder = "data/test_signatures"
+    output_folder = "output/processed_signatures"
 
-    # Run preprocessing on a test image
-    test_image = "data/sample_signature.png"
-    preprocess_signature(test_image)
+    # Check if test folder exists
+    if not os.path.exists(test_folder):
+        print(f"Error: Test folder '{test_folder}' does not exist.")
+        return
 
-    print("\n✅ Preprocessing complete. You can now show this to your supervisor!")
+    # Process images
+    processed_images = preprocess_multiple_for_hog(test_folder, output_folder)
+
+    # Print success message
+    print(f"✅ Preprocessing completed successfully! {len(processed_images)} images saved to '{output_folder}'.")
 
 if __name__ == "__main__":
     main()
