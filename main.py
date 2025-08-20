@@ -1,21 +1,25 @@
-import os
-from src.preprocessing import preprocess_multiple_for_hog
+import tkinter as tk
+from src.classifier import load_dataset, train_svm
+from src.ui import select_file_and_predict
 
 def main():
-    # Path to your test signatures folder
-    test_folder = "data/test_signatures"
-    output_folder = "output/processed_signatures"
+    genuine_folder = "data/genuine"
+    forged_folder = "data/forged"
 
-    # Check if test folder exists
-    if not os.path.exists(test_folder):
-        print(f"Error: Test folder '{test_folder}' does not exist.")
-        return
+    # Load dataset and train SVM
+    X, y = load_dataset(genuine_folder, forged_folder)
+    model = train_svm(X, y)
 
-    # Process images
-    processed_images = preprocess_multiple_for_hog(test_folder, output_folder)
+    # Simple Tkinter UI
+    root = tk.Tk()
+    root.title("Offline Signature Verification (Demo)")
+    root.geometry("400x150")
 
-    # Print success message
-    print(f"✅ Preprocessing completed successfully! {len(processed_images)} images saved to '{output_folder}'.")
+    tk.Label(root, text="Offline Signature Verification (Demo)", font=("Arial", 14)).pack(pady=10)
+    tk.Button(root, text="Select Signature to Verify", font=("Arial", 12),
+              command=lambda: select_file_and_predict(model)).pack(pady=20)
+
+    root.mainloop()
 
 if __name__ == "__main__":
     main()
