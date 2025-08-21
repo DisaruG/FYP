@@ -3,8 +3,8 @@ import numpy as np
 from sklearn import svm
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
-from src.preprocessing import preprocess_signature
-from src.feature_extraction import extract_hog_features
+from FYP.src.preprocessing import preprocess_signature
+from FYP.src.feature_extraction import extract_hog_features
 
 def load_dataset(genuine_folder, forged_folder):
     """Load a small dataset and extract HOG features."""

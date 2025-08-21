@@ -1,7 +1,7 @@
-import tkinter as tk
 from tkinter import filedialog, messagebox
-from src.preprocessing import preprocess_signature
-from src.feature_extraction import extract_hog_features
+from FYP.src.feature_extraction import extract_hog_features
+from FYP.src.preprocessing import preprocess_signature
+
 
 def select_file_and_predict(model):
     """UI function to select a signature, preprocess, and predict."""
