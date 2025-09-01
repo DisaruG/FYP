@@ -1,46 +1,79 @@
 import os
-from src.classifier import load_dataset, train_svm, save_model, load_model, predict
+import tkinter as tk
+from tkinter import filedialog, messagebox
+from PIL import Image, ImageTk
+import cv2
+import numpy as np
+
+# Import your existing modules
+from src.classifier import load_model, predict
 from src.preprocessing import preprocess_signature
 from src.feature_extraction import extract_hog_features
 
+# ---------- CONFIG ----------
+MODEL_PATH = "svm_model.joblib"
+IMAGE_DISPLAY_SIZE = (300, 150)
+# ----------------------------
+
+def run_gui(model):
+    """
+    Tkinter GUI for selecting a signature and predicting Genuine/Forged.
+    """
+    def browse_image():
+        filepath = filedialog.askopenfilename(
+            filetypes=[("Image Files", "*.png;*.jpg;*.jpeg")]
+        )
+        if not filepath:
+            return
+
+        # Display the image
+        img = Image.open(filepath)
+        img.thumbnail(IMAGE_DISPLAY_SIZE)
+        img_tk = ImageTk.PhotoImage(img)
+        image_label.config(image=img_tk)
+        image_label.image = img_tk
+
+        # Predict using the trained model
+        try:
+            processed = preprocess_signature(filepath)
+            features = extract_hog_features(processed).reshape(1, -1)
+            result, prob = predict(model, features)
+            result_text.set(f"Prediction: {result}\nConfidence: {max(prob)*100:.2f}%")
+        except Exception as e:
+            messagebox.showerror("Prediction Error", str(e))
+
+    # Create GUI window
+    root = tk.Tk()
+    root.title("Signature Verification Demo")
+
+    # Browse button
+    browse_btn = tk.Button(root, text="Select Signature Image", command=browse_image)
+    browse_btn.pack(pady=10)
+
+    # Image display
+    image_label = tk.Label(root)
+    image_label.pack()
+
+    # Result label
+    result_text = tk.StringVar()
+    result_label = tk.Label(root, textvariable=result_text, font=("Arial", 14))
+    result_label.pack(pady=10)
+
+    root.mainloop()
+
 def main():
-    genuine_folder = "data/genuine"
-    forged_folder = "data/forged"
+    """
+    Load model and open GUI.
+    """
+    if not os.path.exists(MODEL_PATH):
+        messagebox.showerror("Error", f"Model file '{MODEL_PATH}' not found!")
+        return
 
-    # 1️⃣ Load dataset and train SVM
-    print("Training model on dataset...")
-    X, y = load_dataset(genuine_folder, forged_folder)
-    model = train_svm(X, y)
+    print("Loading model...")
+    model = load_model(MODEL_PATH)
+    print("Model loaded ✅")
 
-    # Save model for later use
-    save_model(model)
-
-    # 2️⃣ Demo single signature prediction
-    print("\nTesting single signature...")
-    test_img = os.path.join(genuine_folder, os.listdir(genuine_folder)[0])
-    processed = preprocess_signature(test_img)
-    features = extract_hog_features(processed).reshape(1, -1)
-    result, prob = predict(model, features)
-    print(f"{test_img} -> {result}, Confidence: {max(prob)*100:.2f}%")
-
-    # 3️⃣ Demo batch signature prediction
-    print("\nBatch testing genuine folder...")
-    for f in os.listdir(genuine_folder):
-        if f.lower().endswith((".png", ".jpg", ".jpeg")):
-            img_path = os.path.join(genuine_folder, f)
-            processed = preprocess_signature(img_path)
-            features = extract_hog_features(processed).reshape(1, -1)
-            result, prob = predict(model, features)
-            print(f"{f:20} | {result:10} | Confidence: {max(prob)*100:.2f}%")
-
-    print("\nBatch testing forged folder...")
-    for f in os.listdir(forged_folder):
-        if f.lower().endswith((".png", ".jpg", ".jpeg")):
-            img_path = os.path.join(forged_folder, f)
-            processed = preprocess_signature(img_path)
-            features = extract_hog_features(processed).reshape(1, -1)
-            result, prob = predict(model, features)
-            print(f"{f:20} | {result:10} | Confidence: {max(prob)*100:.2f}%")
+    run_gui(model)
 
 if __name__ == "__main__":
     main()
